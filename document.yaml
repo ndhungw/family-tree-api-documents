@@ -1,0 +1,658 @@
+openapi: 3.0.0
+# Added by API Auto Mocking Plugin
+servers:
+  # - description: SwaggerHub API Auto Mocking
+  #   url: https://virtserver.swaggerhub.com/test-swagger/1.0.0
+  - description: Family tree API
+    url: https://api.family-tree.com/1.0.0
+info:
+  description: Test APIs document Swagger
+  version: "1.0.0"
+  title: APIs document Family tree
+  termsOfService: 'http://familytree.io/terms/'
+  contact:
+    email: ndh1379@gmail.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: user
+    description: Operations about user
+  - name: node
+    description: Operations about node - presentation of a person in family tree
+paths:
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      responses:
+        default:
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: Created user object
+        required: true
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                type: string
+            application/xml:
+              schema:
+                type: string
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      operationId: logoutUser
+      responses:
+        default:
+          description: successful operation
+  
+  # node path
+  /familytree/{familytreeId}/nodes/add/parent:
+    post:
+      tags:
+        - node
+      summary: Add a new node as a parent of the chosen node
+      description: When user want to add a parent of a specific node.
+      operationId: addNodeAsParent
+      parameters:
+        - in: path
+          name: familytreeId
+          required: true
+          description: The identify of the family tree that is modified.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+
+      requestBody:
+        $ref: '#/components/requestBodies/NodeToAddBody'
+
+      responses:
+        '200':
+          description: Add a new parent node successfully.
+          content:
+            application/json:
+              schema:
+                # $ref: '#/components/schemas/Node'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Add a new parent node successfully"
+                  addedNodeId:
+                    type: string
+                    example: '123abc456def'
+        '401':
+          description: Authorization information is missing or invalid.
+        '5XX':
+          description:  Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error message"
+                  
+  /familytree/{familytreeId}/nodes/add/child:
+    post:
+        tags:
+          - node
+        summary: Add a new node as a child of the chosen node
+        description:
+        operationId: addNodeAsChild
+        parameters:
+          - in: path
+            name: familytreeId
+            required: true
+            description: The identify of the family tree that is modified.
+            schema:
+              type: integer
+              format: int64
+              minimum: 1
+        requestBody:
+          $ref: '#/components/requestBodies/NodeToAddBody'
+        responses:
+          '200':
+            description: Add a new child node successfully.
+            content:
+              application/json:
+                schema:
+                  # $ref: '#/components/schemas/Node'
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "Add a new child node successfully"
+                    addedNodeId:
+                      type: string
+                      example: '123abc456def'
+          '401':
+            description: Authorization information is missing or invalid.
+          '5XX':
+            description:  Unexpected error.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "Error message"
+                      
+  /familytree/{familytreeId}/nodes/add/sibling:
+    post:
+      tags:
+        - node
+      summary: Add a new node as a sibling of the chosen node
+      description:
+      operationId: addNodeAsSibling
+      parameters:
+          - in: path
+            name: familytreeId
+            required: true
+            description: The identify of the family tree that is modified.
+            schema:
+              type: integer
+              format: int64
+              minimum: 1
+      requestBody:
+          # $ref: '#/components/requestBodies/NodeToAddBody'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chosenNodeId:
+                    type: string
+                    description: The identify of the specific node whose **sibling** is going to be added.
+                  fatherNodeId:
+                    type: string
+                    description: The identify of the father node
+                  motherNodeId:
+                    type: string
+                    description: The identify of the mother node
+                  nodeToAdd:
+                    $ref: '#/components/schemas/Node'
+                required:
+                  - chosenNodeId
+                  - fatherNodeId
+                  - motherNodeId
+                  - nodeToAdd
+      responses:
+        '200':
+          description: Add a new sibling node successfully.
+          content:
+            application/json:
+              schema:
+                # $ref: '#/components/schemas/Node'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Add a new sibling node successfully"
+                  addedNodeId:
+                    type: string
+                    example: '123abc456def'
+                  familytreeId:
+                    type: string
+                    example: '987iuy654'
+        '401':
+          description: Authorization information is missing or invalid.
+        '5XX':
+          description:  Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error message"
+  /familytree/{familytreeId}/nodes/add/partner:
+    post:
+      tags:
+        - node
+      summary: Add a new node as a partner of the chosen node
+      description:
+      operationId: addNodeAsPartner
+      parameters:
+        - in: path
+          name: familytreeId
+          required: true
+          description: The identify of the family tree that is modified.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+          # $ref: '#/components/requestBodies/NodeToAddBody'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chosenNodeId:
+                    type: string
+                    description: The identify of the specific node whose **sibling** is going to be added.
+                  nodeToAdd:
+                    $ref: '#/components/schemas/Node'
+                  relationshipStatus:
+                    type: integer
+                    format: int32
+                    enum: [1, 2, 3]
+                    description: "1: Married, 2: Devoiced, 3: Other"
+                  relationshipInfo:
+                    type: object
+                    properties:
+                      marriageDate:
+                        type: string
+                        description: The date that wedding happened
+                      devoicedDate:
+                        type: string
+                        description: The date that those 2 people devoiced.
+                      note:
+                        type: string
+                        description: note for this relationship, make it more easy to understand
+                required:
+                  - chosenNodeId
+                  - nodeToAdd
+      responses:
+        '200':
+          description: Add a new partner node successfully.
+          content:
+            application/json:
+              schema:
+                # $ref: '#/components/schemas/Node'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Add a new partner node successfully"
+                  addedNodeId:
+                    type: string
+                    example: '123abc456def'
+        '401':
+          description: Authorization information is missing or invalid.
+        '5XX':
+          description:  Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error message"
+  /familytree/{familytreeId}/nodes/delete/{nodeId}/check:
+    get:
+      tags:
+        - node
+      summary: 
+      description:
+      operationId: checkIfRemovable
+      parameters:
+        - in: path
+          name: familytreeId
+          required: true
+          description:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - in: path
+          name: nodeId
+          required: true
+          description:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isRemovable:
+                    type: boolean
+                    example: true
+        '401':
+          description: Authorization information is missing or invalid.
+        '5XX':
+          description:  Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error message"
+  /familytree/{familytreeId}/nodes/{nodeId}:
+    delete:
+      tags:
+        - node
+      summary: Delete a node by nodeId
+      description: Need to check if this **node** is **removable** by using endpoint */familytree/{familytreeId}/nodes/delete/{nodeId}/check*
+      operationId: deleteNodeById
+      parameters:
+        - in: path
+          name: familytreeId
+          required: true
+          description:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - in: path
+          name: nodeId
+          required: true
+          description:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Delete node successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deletedNodeId:
+                    type: string
+                    example: '123abc456def'
+                  message:
+                    type: string
+                    example: Delete node successfully.
+        '401':
+          description: Authorization information is missing or invalid.
+        '5XX':
+          description:  Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error message"
+    put:
+      tags:
+        - node
+      summary: Update a node by nodeId
+      operationId: updateNodeById
+      parameters:
+        - in: path
+          name: familytreeId
+          required: true
+          description:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - in: path
+          name: nodeId
+          required: true
+          description:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      requestBody:
+        description:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+            examples:
+              node:
+                $ref: '#/components/examples/node'
+      responses:
+        '200':
+          description: Update node successfully.
+          content:
+            application/json:
+              schema:
+                # $ref: '#/components/schemas/Node'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Update node successfully."
+                  updatedNodeId:
+                    type: string
+                    example: '123abc456def'
+        '401':
+          description: Authorization information is missing or invalid.
+        '5XX':
+          description:  Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error message"
+      
+components:
+  # schemas: Pascal case
+  schemas:
+    # example for user model
+    User:
+      type: object
+      description: (this is a example of schema from swagger ui tutorial)
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        userStatus:
+          type: integer
+          format: int32
+          description: User Status
+      xml:
+        name: User
+    Node:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: First name.
+        lastName:
+          type: string
+          description: Last name.
+        gender:
+          type: integer
+          format: int32
+          enum: [0,1,2]
+          description: '0: unknown, 1: male, 2: female'
+        prefix:
+          type: string
+          description: Display name = prefix lastName firstName, suffix
+        suffix:
+          type: string
+          description: Display name = prefix lastName firstName, suffix
+        dob:
+          type: string
+          description: Date of birth.
+        birthPlace:
+          type: string
+          description: Where this person was born
+        isLiving:
+          type: boolean
+          default: true
+          description: Describe this person is still alive or not.
+        dod:
+          type: string
+          description: Date of death.
+        deathPlace:
+          type: string
+          description: Where this person dead.
+        causeOfDeath:
+          type: string
+          description: The reason of this person's death.
+        burialPlace:
+          type: string
+        extraInfo:
+          type: object
+          description: More information about this person. Each of them can be null.
+          properties:
+            address:
+              type: string
+              description: Where this person live.
+            phone:
+              type: string
+              description: Phone number.
+            workAddress:
+              type: string
+              description: Where this person work at.
+            job:
+              type: string
+              description: What does this person do.
+      required:
+        - gender
+        - isLiving
+
+  # request bodies: Pascal Case
+  requestBodies:
+    UserArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+      description: List of user object (this is a example of request body from swagger ui tutorial)
+      required: true
+    NodeToAddBody:
+      required: true
+      description: Required info when add a new node that relates with a specific node
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              chosenNodeId:
+                type: string
+                description: The identify of the specific node whose father is going to be added.
+              nodeToAdd:
+                $ref: '#/components/schemas/Node'
+            required:
+              - chosenNodeId
+              - nodeToAdd
+          examples:
+            nodeToAddBody:
+              $ref: '#/components/examples/nodeToAddBody'
+  # examples: Camel case
+  examples:
+    node: # <--- example name
+      summary: An example of a node who is still alive
+      value:
+        # vv Actual payload goes here vv
+        firstName: "Dong Hung"
+        lastName: "Nguyen"
+        gender: 1
+        prefix: "Anh"
+        suffix: "CTT4"
+        dob: '02/10/1999'
+        birthPlace: "Phu My, Binh Dinh, Vietnam"
+        isLiving: true
+        extraInfo:
+          address: "117 Nghia Thuc, Ward 5, District 5, Ho Chi Minh City"
+          phone: '0865154878'
+          workAddress: null
+          job: null
+    nodeToAddBody:
+      summary: An example of request body when adding a new node
+      value:
+        chosenNodeId: '123abc456def'
+        nodeToAdd:
+          firstName: "Dong Hung"
+          lastName: "Nguyen"
+          gender: 1
+          prefix: "Anh"
+          suffix: "CTT4"
+          dob: '02/10/1999'
+          birthPlace: "Phu My, Binh Dinh, Vietnam"
+          isLiving: true
+          extraInfo:
+            address: "117 Nghia Thuc, Ward 5, District 5, Ho Chi Minh City"
+            phone: '0865154878'
+            workAddress: null
+            job: null
+  securitySchemes:
+    test_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: 'http://test-swagger.herokuapp.com'
+          scopes:
+            'write:users': modify your account
+            'read:users': read your information
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
